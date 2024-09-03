@@ -8,11 +8,8 @@ struct eeprom_data {
   unsigned char sign = EEPROM_SIGNATURE;
   //
   char device_name[32];
-  //
   char fixed_ip[32];
-  //
   unsigned int mqtt_server_port;
-  //
 } eeprom;
 
 const char EEPROM_INFO[] PROGMEM =

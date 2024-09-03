@@ -46,17 +46,21 @@ void handle_404() { server.send(200, F("text/txt"), F("Not found")); }
 void handle_root() {
   String s;
   //
+  s += "Memória livre: <i>" + String(ESP.getFreeHeap()) +
+       " bytes</i> (frag: <i>" + String(ESP.getHeapFragmentation()) +
+       "%)</i><br>";
+  // info
+  s += "IP: <i>" + WiFi.localIP().toString() + "</i><br>";
+  s += "Data de ínicio: <i>" + String(boot_time) + "</i><br>";
+  // version
+  s += "Versão: " + String(VERSION) + "<br><br>";
+  //
   s += "<form action='/config' method='POST'><input type='submit' "
        "value='CONFIG'></form>";
   s += "<form action='/reboot' method='POST'><input type='submit' "
        "value='REBOOT'></form>";
   s += "<form action='/reset' method='POST'><input type='submit' "
-       "value='RESET'></form><br>";
-  // info
-  s += "IP: <i>" + WiFi.localIP().toString() + "</i><br>";
-  s += "Data de ínicio: <i>" + String(boot_time) + "</i><br>";
-  // version
-  s += "Version: " + String(VERSION) + "<br><br>";
+       "value='RESET'></form>";
   // update
   s += "<form action='/update' method='POST' "
        "enctype='multipart/form-data'><label for='firmware'>Atualizar "
@@ -102,27 +106,29 @@ void handle_config() {
   } else {
     String s;
     FORM_START("/config")
-    FORM_ASK_VALUE(device_name, "Device name:")
-    FORM_ASK_VALUE(fixed_ip, "Fixed IP:")
-    FORM_ASK_VALUE(mqtt_server_port, "MQTT Broker Port:")
+    FORM_ASK_VALUE(device_name, "Device name")
+    FORM_ASK_VALUE(fixed_ip, "MQTT Broker fixed IP")
+    FORM_ASK_VALUE(mqtt_server_port, "MQTT Broker Port")
     FORM_END("SALVAR")
+    s += "<br>";
+    // info
+    s += "IP: <i>" + WiFi.localIP().toString() + "</i><br>";
+    s += "Data de ínicio: <i>" + String(boot_time) + "</i><br>";
+    // version
+    s += "Versão: " + String(VERSION) + "<br><br>";
     //
-    // s += "<form action='/config' method='POST'><input type='submit' "
-    //      "value='CONFIG'></form>";
+    s += "<form action='/' method='POST'><input type='submit' "
+         "value='MAIN'></form>";
     s += "<form action='/reboot' method='POST'><input type='submit' "
          "value='REBOOT'></form>";
     s += "<form action='/reset' method='POST'><input type='submit' "
-         "value='RESET'></form><br>";
+         "value='RESET'></form>";
     // update
     s += "<form action='/update' method='POST' "
          "enctype='multipart/form-data'><label for='firmware'>Atualizar "
          "firmware:</label><input type='file' accept='.bin,.bin.gz' "
          "name='firmware'><input type='submit' value='ATUALIZAR'></form>";
-    // info
-    s += "IP: <i>" + WiFi.localIP().toString() + "</i><br>";
-    s += "Data de ínicio: <i>" + String(boot_time) + "</i><br>";
-    // version
-    s += "Version: " + String(VERSION) + "<br><br>";
+
     // send config page
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send_P(200, "text/html", html_header);
@@ -236,6 +242,7 @@ void setup() {
   configTime("<-03>3", "pool.ntp.org");
   // repeat till get year past 2021...
   while (time(nullptr) < 1609459200) {
+    Serial.print(".");
     delay(100);
   }
 
