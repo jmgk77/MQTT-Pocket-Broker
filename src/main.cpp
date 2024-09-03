@@ -23,9 +23,14 @@ Copyright JMGK 2022/2023
 WiFiManager wm;
 ESP8266WebServer server;
 ESP8266HTTPUpdateServer httpUpdater;
+
+#ifdef DEBUG_RAM
 Ticker debug_ram;
+#endif
 
 char boot_time[32];
+
+PicoMQTT::Server* mqtt;
 
 /*
 db   d8b   db d88888b d8888b.
@@ -152,8 +157,6 @@ db   8D 88.        88    88b  d88 88
 `8888Y' Y88888P    YP    ~Y8888P' 88
 */
 
-Ticker reboot;
-
 void setup() {
   // init eeprom
   EEPROM.begin(sizeof(eeprom_data));
@@ -209,22 +212,11 @@ void setup() {
   Serial.println("Got IP: " + WiFi.localIP().toString());
 
   // mqtt
-  MQTT_server_start(eeprom.mqtt_server_port, 30, 30);
-  MQTT_server_onAuth([](const char *username, const char *password,
-                        const char *client_id,
-                        struct espconn *pesp_conn) -> bool {
-    Serial.printf("MQTT AUTH\n");
-    return true;
+  mqtt = new PicoMQTT::Server((uint16_t)eeprom.mqtt_server_port);
+  mqtt->subscribe("#", [](const char* topic, const char* payload) {
+    Serial.printf("Received message in topic '%s': %s\n", topic, payload);
   });
-  MQTT_server_onConnect(
-      [](struct espconn *pesp_conn, uint16_t client_count) -> bool {
-        Serial.printf("MQTT CONNECT (%d)\n", client_count);
-        return true;
-      });
-  MQTT_server_onDisconnect(
-      [](struct espconn *pesp_conn, const char *client_id) -> void {
-        Serial.printf("MQTT DISCONNECT (%s)\n", client_id);
-      });
+  mqtt->begin();
 
   // install www handlers
   httpUpdater.setup(&server, "/update");
@@ -252,16 +244,12 @@ void setup() {
   strncpy(boot_time, ctime(&t), sizeof(boot_time));
   Serial.print(boot_time);
 
+#ifdef DEBUG_RAM
   debug_ram.attach(10, []() {
     Serial.printf("MEM (%d)[%d]\n", ESP.getFreeHeap(),
                   ESP.getMaxFreeBlockSize());
   });
-
-  //
-  reboot.attach(60 * 60 * 24, [] {
-    Serial.println("REBOOT");
-    ESP.restart();
-  });
+#endif
 
   Serial.println(F("--------------------SETUP DONE--------------------"));
 }
@@ -281,4 +269,7 @@ void loop() {
 
   // handle discovery protocols
   MDNS.update();
+
+  // handle mqtt
+  mqtt->loop();
 }

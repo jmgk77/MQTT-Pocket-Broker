@@ -6,9 +6,12 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ESP_EEPROM.h>
-#include <Ticker.h>
+#include <PicoMQTT.h>
 #include <WiFiManager.h>
-#include <uMQTTBroker.h>
+
+#ifdef DEBUG_RAM
+#include <Ticker.h>
+#endif
 
 #include "eeprom.h"
 #include "html.h"
