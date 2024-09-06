@@ -7,7 +7,7 @@
 ╚═╝     ╚═╝ ╚══▀▀═╝    ╚═╝      ╚═╝
 
 
-Copyright JMGK 2022/2023
+Copyright JMGK 2024
 */
 
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER"
@@ -30,7 +30,7 @@ Ticker debug_ram;
 
 char boot_time[32];
 
-PicoMQTT::Server* mqtt;
+PicoMQTT::Server* mqtt_broker;
 
 /*
 db   d8b   db d88888b d8888b.
@@ -218,11 +218,11 @@ void setup() {
   Serial.println("Got IP: " + WiFi.localIP().toString());
 
   // mqtt
-  mqtt = new PicoMQTT::Server((uint16_t)eeprom.mqtt_server_port);
-  mqtt->subscribe("#", [](const char* topic, const char* payload) {
+  mqtt_broker = new PicoMQTT::Server((uint16_t)eeprom.mqtt_server_port);
+  mqtt_broker->subscribe("#", [](const char* topic, const char* payload) {
     Serial.printf("Received message in topic '%s': %s\n", topic, payload);
   });
-  mqtt->begin();
+  mqtt_broker->begin();
 
   // install www handlers
   httpUpdater.setup(&server, "/update");
@@ -278,5 +278,5 @@ void loop() {
   MDNS.update();
 
   // handle mqtt
-  mqtt->loop();
+  mqtt_broker->loop();
 }
