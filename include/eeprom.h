@@ -8,10 +8,10 @@ struct eeprom_data {
   unsigned char sign = EEPROM_SIGNATURE;
   //
   char device_name[32];
-  char mqtt_server_ip[32];
+  char mqtt_server_ip[64];
   unsigned int mqtt_server_port;
   bool mqtt_remote_enable;
-  char mqtt_remote_ip[32];
+  char mqtt_remote_ip[64];
   unsigned int mqtt_remote_port;
   char mqtt_remote_username[32];
   char mqtt_remote_password[32];
