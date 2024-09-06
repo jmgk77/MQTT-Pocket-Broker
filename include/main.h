@@ -11,11 +11,8 @@
 #include <ESP8266mDNS.h>
 #include <ESP_EEPROM.h>
 #include <PicoMQTT.h>
-#include <WiFiManager.h>
-
-#ifdef DEBUG
 #include <Ticker.h>
-#endif
+#include <WiFiManager.h>
 
 #include "eeprom.h"
 #include "html.h"
