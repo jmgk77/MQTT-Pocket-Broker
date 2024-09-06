@@ -1,5 +1,9 @@
 #pragma once
 
+#if !defined(ESP8266)
+#error This code is designed to run on ESP8266 and ESP8266-based boards! Please check your Tools->Board setting.
+#endif
+
 #include <Arduino.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
@@ -9,7 +13,7 @@
 #include <PicoMQTT.h>
 #include <WiFiManager.h>
 
-#ifdef DEBUG_RAM
+#ifdef DEBUG
 #include <Ticker.h>
 #endif
 

@@ -10,10 +10,12 @@
 Copyright JMGK 2024
 */
 
-#define DEFAULT_DEVICE_NAME "MQTT_SERVER"
+#define DEBUG
 
-#if !defined(ESP8266)
-#error This code is designed to run on ESP8266 and ESP8266-based boards! Please check your Tools->Board setting.
+#ifdef DEBUG
+#define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
+#else
+#define DEFAULT_DEVICE_NAME "MQTT_SERVER"
 #endif
 
 #include "main.h"
@@ -24,11 +26,13 @@ WiFiManager wm;
 ESP8266WebServer server;
 ESP8266HTTPUpdateServer httpUpdater;
 
-#ifdef DEBUG_RAM
+#ifdef DEBUG
 Ticker debug_ram;
 #endif
 
 char boot_time[32];
+
+uint32_t startup_heap;
 
 PicoMQTT::Server* mqtt_broker;
 
@@ -44,16 +48,21 @@ Y8   I8I   88 88~~~~~ 88~~~b.
 void handle_404() { server.send(200, F("text/txt"), F("Not found")); }
 
 void handle_root() {
+  uint32_t heap = ESP.getFreeHeap();
   String s;
   //
-  s += "Memória livre: <i>" + String(ESP.getFreeHeap()) +
-       " bytes</i> (frag: <i>" + String(ESP.getHeapFragmentation()) +
-       "%)</i><br>";
+  s += "Memória livre: <i>" + String(heap) + "/" + String(startup_heap) +
+       " bytes</i> (" + String((float)((heap * 100) / startup_heap), 2) +
+       "\%, frag: <i>" + String(ESP.getHeapFragmentation()) + "%)</i><br>";
   // info
   s += "IP: <i>" + WiFi.localIP().toString() + "</i><br>";
   s += "Data de ínicio: <i>" + String(boot_time) + "</i><br>";
   // version
-  s += "Versão: " + String(VERSION) + "<br><br>";
+  s += "Versão: " + String(VERSION) +
+#ifdef DEBUG
+       "<FONT color=red><b> DEBUG</b></FONT>" +
+#endif
+       "<br><br>";
   //
   s += "<form action='/config' method='POST'><input type='submit' "
        "value='CONFIG'></form>";
@@ -61,11 +70,6 @@ void handle_root() {
        "value='REBOOT'></form>";
   s += "<form action='/reset' method='POST'><input type='submit' "
        "value='RESET'></form>";
-  // update
-  s += "<form action='/update' method='POST' "
-       "enctype='multipart/form-data'><label for='firmware'>Atualizar "
-       "firmware:</label><input type='file' accept='.bin,.bin.gz' "
-       "name='firmware'><input type='submit' value='ATUALIZAR'></form>";
   // send config page
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send_P(200, "text/html", html_header);
@@ -110,12 +114,11 @@ void handle_config() {
     FORM_ASK_VALUE(fixed_ip, "MQTT Broker fixed IP")
     FORM_ASK_VALUE(mqtt_server_port, "MQTT Broker Port")
     FORM_END("SALVAR")
-    s += "<br>";
-    // info
-    s += "IP: <i>" + WiFi.localIP().toString() + "</i><br>";
-    s += "Data de ínicio: <i>" + String(boot_time) + "</i><br>";
-    // version
-    s += "Versão: " + String(VERSION) + "<br><br>";
+    // update
+    s += "<form action='/update' method='POST' "
+         "enctype='multipart/form-data'><label for='firmware'>Atualizar "
+         "firmware:</label><input type='file' accept='.bin,.bin.gz' "
+         "name='firmware'><input type='submit' value='ATUALIZAR'></form>";
     //
     s += "<form action='/' method='POST'><input type='submit' "
          "value='MAIN'></form>";
@@ -123,12 +126,6 @@ void handle_config() {
          "value='REBOOT'></form>";
     s += "<form action='/reset' method='POST'><input type='submit' "
          "value='RESET'></form>";
-    // update
-    s += "<form action='/update' method='POST' "
-         "enctype='multipart/form-data'><label for='firmware'>Atualizar "
-         "firmware:</label><input type='file' accept='.bin,.bin.gz' "
-         "name='firmware'><input type='submit' value='ATUALIZAR'></form>";
-
     // send config page
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send_P(200, "text/html", html_header);
@@ -164,6 +161,9 @@ db   8D 88.        88    88b  d88 88
 */
 
 void setup() {
+  // save initial free heap
+  startup_heap = ESP.getFreeHeap();
+
   // init eeprom
   EEPROM.begin(sizeof(eeprom_data));
 
@@ -251,7 +251,7 @@ void setup() {
   strncpy(boot_time, ctime(&t), sizeof(boot_time));
   Serial.print(boot_time);
 
-#ifdef DEBUG_RAM
+#ifdef DEBUG
   debug_ram.attach(10, []() {
     Serial.printf("MEM (%d)[%d]\n", ESP.getFreeHeap(),
                   ESP.getMaxFreeBlockSize());
