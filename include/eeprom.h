@@ -69,9 +69,8 @@ unsigned int calculate_eeprom_checkum() {
 
   unsigned int checksum = 0;
   for (unsigned int i = 0; i < sizeof(eeprom_data); i++) {
-    checksum += buffer[i];
+    checksum += ~buffer[i];
   }
-  checksum = ~checksum;
   checksum ^= 'JMGK';
 
   // restore old checksum

@@ -114,8 +114,8 @@ void handle_config() {
     FORM_SAVE_BOOL(mqtt_remote_send)
     FORM_SAVE_BOOL(mqtt_remote_receive)
     // save data to eeprom
-    dump_eeprom();
     save_eeprom();
+    dump_eeprom();
     server.send(200, F("text/html"),
                 F("<meta http-equiv='refresh' content='0; url=/config' />"));
   } else {
