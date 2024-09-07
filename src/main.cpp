@@ -10,7 +10,7 @@
 Copyright JMGK 2024
 */
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
@@ -182,17 +182,18 @@ void setup() {
   // save initial free heap
   startup_heap = ESP.getFreeHeap();
 
+  //
+  Serial.begin(115200);
+  delay(1000);
+
   // init eeprom
   EEPROM.begin(sizeof(eeprom_data));
 
   // if there's valid eeprom config, load it
   EEPROM.get(0, eeprom);
-  if (eeprom.sign != EEPROM_SIGNATURE) {
+  if (!verify_eeprom()) {
     default_eeprom();
   }
-
-  Serial.begin(115200);
-  delay(1000);
 
   Serial.println(F("\n--------------------------------------------------"));
   Serial.print("MQTT_SERVER ");
