@@ -71,7 +71,8 @@ unsigned int calculate_eeprom_checkum() {
   for (unsigned int i = 0; i < sizeof(eeprom_data); i++) {
     checksum += ~buffer[i];
   }
-  checksum ^= 'JMGK';
+  // xor with 'JMGK'
+  checksum ^= 0x4a4d474b;
 
   // restore old checksum
   eeprom.checksum = temp_checksum;

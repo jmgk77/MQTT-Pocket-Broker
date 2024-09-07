@@ -88,13 +88,17 @@ void handle_root() {
 #define FORM_START(URL) \
   s += "<form action='" + String(URL) + "' method='POST'>";
 #define FORM_ASK_VALUE(VAR, TXT)                                           \
-  s += "<label for='" + String(#VAR) + "'>" + String(TXT) +                \
-       ":</label><input type='text' name='" + String(#VAR) + "' value='" + \
-       eeprom.VAR + "'><br>";
-#define FORM_ASK_BOOL(VAR, TXT)                                         \
-  s += "<label for='" + String(#VAR) + "'>" + String(TXT) +             \
-       ":</label><input type='checkbox' name='" + String(#VAR) + "' " + \
-       String(eeprom.VAR ? "checked" : "") + "><br>";
+  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +  \
+       String(TXT) + ":</label><input type='text' name='" + String(#VAR) + \
+       "' value='" + eeprom.VAR + "'><br>";
+#define FORM_ASK_BOOL(VAR, TXT)                                                \
+  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +      \
+       String(TXT) + ":</label><input type='checkbox' name='" + String(#VAR) + \
+       "' " + String(eeprom.VAR ? "checked" : "") + "><br>";
+#define FORM_ASK_BOOL_JS(VAR, TXT, JS)                                         \
+  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +      \
+       String(TXT) + ":</label><input type='checkbox' name='" + String(#VAR) + \
+       "' " + String(eeprom.VAR ? "checked " : " ") + String(JS) + "><br>";
 #define FORM_END(BTN)                                                          \
   s +=                                                                         \
       "<input type='hidden' name='s' value='1'><input type='submit' value='" + \
@@ -124,7 +128,8 @@ void handle_config() {
     FORM_ASK_VALUE(device_name, "Device name")
     FORM_ASK_VALUE(mqtt_server_ip, "MQTT Broker fixed IP")
     FORM_ASK_VALUE(mqtt_server_port, "MQTT Broker Port")
-    FORM_ASK_BOOL(mqtt_remote_enable, "Enable remote MQTT")
+    FORM_ASK_BOOL_JS(mqtt_remote_enable, "Enable remote MQTT",
+                     js_mqtt_remote_enable)
     FORM_ASK_VALUE(mqtt_remote_ip, "MQTT remote IP")
     FORM_ASK_VALUE(mqtt_remote_port, "MQTT remote Port")
     FORM_ASK_VALUE(mqtt_remote_username, "MQTT remote username")
@@ -144,6 +149,8 @@ void handle_config() {
          "value='REBOOT'></form>";
     s += "<form action='/reset' method='POST'><input type='submit' "
          "value='RESET'></form>";
+    // add javascript for config page
+    s += js_config;
     // send config page
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send_P(200, "text/html", html_header);
