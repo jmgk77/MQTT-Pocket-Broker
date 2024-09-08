@@ -5,6 +5,7 @@
 #endif
 
 #include <Arduino.h>
+#include <CRC32.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>

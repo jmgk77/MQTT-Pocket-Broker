@@ -59,24 +59,24 @@ String dump_eeprom_string() {
 }
 
 unsigned int calculate_eeprom_checkum() {
+  //
+  unsigned char buffer[sizeof(eeprom_data)];
+  CRC32 crc;
+
   // save old checksum
   unsigned int temp_checksum = eeprom.checksum;
   eeprom.checksum = 0;
 
   // copy eeprom data
-  unsigned char buffer[sizeof(eeprom_data)];
   memcpy(buffer, &eeprom, sizeof(eeprom_data));
 
-  unsigned int checksum = 0;
   for (unsigned int i = 0; i < sizeof(eeprom_data); i++) {
-    checksum += ~buffer[i];
+    crc.update(buffer[i]);
   }
-  // xor with 'JMGK'
-  checksum ^= 0x4a4d474b;
 
   // restore old checksum
   eeprom.checksum = temp_checksum;
-  return checksum;
+  return crc.finalize();
 }
 
 void save_eeprom() {
