@@ -79,31 +79,6 @@ void handle_root() {
   server.sendContent_P(html_footer);
 }
 
-#define FORM_SAVE_STRING(VAR) \
-  strncpy(eeprom.VAR, server.arg(#VAR).c_str(), sizeof(eeprom.VAR));
-#define FORM_SAVE_INT(VAR) eeprom.VAR = server.arg(#VAR).toInt();
-#define FORM_SAVE_BOOL(VAR) \
-  eeprom.VAR = server.arg(#VAR) == "on" ? true : false;
-
-#define FORM_START(URL) \
-  s += "<form action='" + String(URL) + "' method='POST'>";
-#define FORM_ASK_VALUE(VAR, TXT)                                           \
-  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +  \
-       String(TXT) + ":</label><input type='text' name='" + String(#VAR) + \
-       "' value='" + eeprom.VAR + "'><br>";
-#define FORM_ASK_BOOL(VAR, TXT)                                                \
-  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +      \
-       String(TXT) + ":</label><input type='checkbox' name='" + String(#VAR) + \
-       "' " + String(eeprom.VAR ? "checked" : "") + "><br>";
-#define FORM_ASK_BOOL_JS(VAR, TXT, JS)                                         \
-  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +      \
-       String(TXT) + ":</label><input type='checkbox' name='" + String(#VAR) + \
-       "' " + String(eeprom.VAR ? "checked " : " ") + String(JS) + "><br>";
-#define FORM_END(BTN)                                                          \
-  s +=                                                                         \
-      "<input type='hidden' name='s' value='1'><input type='submit' value='" + \
-      String(BTN) + "'></form>";
-
 void handle_config() {
   if (server.hasArg("s")) {
     // read options
