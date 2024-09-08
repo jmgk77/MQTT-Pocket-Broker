@@ -9,17 +9,17 @@
 #define FORM_START(URL) \
   s += "<form action='" + String(URL) + "' method='POST'>";
 #define FORM_ASK_VALUE(VAR, TXT)                                           \
-  s += "<label for='" + String(#VAR) + "'>" + String(TXT) +                \
-       ":</label><input type='text' name='" + String(#VAR) + "' value='" + \
-       eeprom.VAR + "'><br>";
-#define FORM_ASK_BOOL(VAR, TXT)                                         \
-  s += "<label for='" + String(#VAR) + "'>" + String(TXT) +             \
-       ":</label><input type='checkbox' name='" + String(#VAR) + "' " + \
-       String(eeprom.VAR ? "checked" : "") + "><br>";
-#define FORM_ASK_BOOL_JS(VAR, TXT, JS)                                  \
-  s += "<label for='" + String(#VAR) + "'>" + String(TXT) +             \
-       ":</label><input type='checkbox' name='" + String(#VAR) + "' " + \
-       String(eeprom.VAR ? "checked " : "") + String(JS) + "><br>";
+  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +  \
+       String(TXT) + ":</label><input type='text' name='" + String(#VAR) + \
+       "' value='" + eeprom.VAR + "'><br>";
+#define FORM_ASK_BOOL(VAR, TXT)                                                \
+  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +      \
+       String(TXT) + ":</label><input type='checkbox' name='" + String(#VAR) + \
+       "' " + String(eeprom.VAR ? "checked" : "") + "><br>";
+#define FORM_ASK_BOOL_JS(VAR, TXT, JS)                                         \
+  s += "<label for='" + String(#VAR) + "' name='" + String(#VAR) + "'>" +      \
+       String(TXT) + ":</label><input type='checkbox' name='" + String(#VAR) + \
+       "' " + String(eeprom.VAR ? "checked " : "") + String(JS) + "><br>";
 #define FORM_END(BTN)                                                          \
   s +=                                                                         \
       "<input type='hidden' name='s' value='1'><input type='submit' value='" + \
@@ -32,13 +32,15 @@ const char html_header[] PROGMEM =
 const char html_footer[] PROGMEM = R""""(</body></html>)"""";
 
 const char js_mqtt_remote_enable[] PROGMEM =
-    R""""(onclick=_enable_disable('mqtt_remote_enable',mqtt_remote_group))"""";
+    R""""(onclick="_enable_disable('mqtt_remote_enable',mqtt_remote_group)")"""";
 
-const char js_config[] PROGMEM = R""""(
-<script>
+const char js_config[] PROGMEM = R""""(<script>
 function _enable_disable(cbox, elements){
+var status=!(document.getElementsByName(cbox)[1].checked);
   for (const element of elements) {
-    document.getElementsByName(element)[0].disabled=!(document.getElementsByName(cbox)[0].checked);
+    var e=document.getElementsByName(element);
+    e[0].hidden=status;
+    e[1].hidden=status;
   }
 }
 

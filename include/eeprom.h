@@ -55,7 +55,7 @@ String dump_eeprom_string() {
           eeprom.mqtt_remote_receive ? "YES" : "NO");
   String s = buffer;
   s.replace("\n", "<br>");
-  return "<FONT color=blue>" + s + "</FONT<br><br>";
+  return "<FONT color=blue>" + s + "</FONT><br><br>";
 }
 
 unsigned int calculate_eeprom_checkum() {
