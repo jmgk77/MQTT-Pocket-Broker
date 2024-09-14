@@ -10,7 +10,7 @@
 Copyright JMGK 2024
 */
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
@@ -297,7 +297,7 @@ void loop() {
   mqtt_broker->loop();
 
   // handle mqtt client
-  if (eeprom.mqtt_remote_enable) {
+  if ((mqtt_client) && (eeprom.mqtt_remote_enable)) {
     mqtt_client->loop();
   }
 }
