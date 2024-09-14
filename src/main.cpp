@@ -10,7 +10,7 @@
 Copyright JMGK 2024
 */
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
