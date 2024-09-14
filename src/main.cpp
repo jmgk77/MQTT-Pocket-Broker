@@ -174,7 +174,7 @@ void setup() {
 
   Serial.println(F("\n--------------------------------------------------"));
   Serial.print("MQTT_SERVER ");
-  Serial.println(VERSION);
+  Serial.println(VERSION_SHORT);
   dump_esp8266();
   dump_eeprom();
 
