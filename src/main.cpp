@@ -270,8 +270,8 @@ void setup() {
   server.begin();
 
   // discovery protocols
-  // MDNS.begin(eeprom.device_name);
-  // MDNS.addService("http", "tcp", 80);
+  MDNS.begin(eeprom.device_name);
+  MDNS.addService("http", "tcp", 80);
 
   // get internet time (GMT-3)
   configTime("<-03>3", "pool.ntp.org");
@@ -308,7 +308,7 @@ void setup() {
 
 void loop() {
   // handle discovery protocols
-  // MDNS.update();
+  MDNS.update();
 
   // handle mqtt broker
   mqtt_broker->loop();
