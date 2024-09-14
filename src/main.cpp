@@ -23,11 +23,10 @@ Copyright JMGK 2024
 #include <Arduino.h>
 
 // WiFiManager wm;
-// ESP8266WebServer server;
 
 AsyncWebServer server(80);
 
-// ESP8266HTTPUpdateServer httpUpdater;
+ESPAsyncHTTPUpdateServer updateServer;
 
 char boot_time[32];
 
@@ -82,19 +81,6 @@ void handle_root(AsyncWebServerRequest* request) {
 }
 
 void handle_config(AsyncWebServerRequest* request) {
-  // List all parameters
-  int params = request->params();
-  for (int i = 0; i < params; i++) {
-    AsyncWebParameter* p = request->getParam(i);
-    if (p->isFile()) {  // p->isPost() is also true
-      Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(),
-                    p->value().c_str(), p->size());
-    } else if (p->isPost()) {
-      Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-    } else {
-      Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
-    }
-  }
   //
   if (request->hasParam("s", true)) {
     // read options
@@ -129,10 +115,10 @@ void handle_config(AsyncWebServerRequest* request) {
     FORM_ASK_BOOL(mqtt_remote_receive, "Receive from remote MQTT")
     FORM_END("SALVAR")
     // update
-    s += "<form action='/update' method='POST' "
-         "enctype='multipart/form-data'><label for='firmware'>Atualizar "
-         "firmware:</label><input type='file' accept='.bin,.bin.gz' "
-         "name='firmware'><input type='submit' value='ATUALIZAR'></form><br>";
+    s +=
+        "<form action='/update?name=firmware'enctype=multipart/form-data "
+        "method=POST>Firmware:<br><input type=file accept=.bin,.bin.gz "
+        "name=firmware> <input type=submit value='Update Firmware'></form><br>";
     // buttons
     s += "<form action='/' method='POST'><input type='submit' "
          "value='MAIN'></form>";
@@ -215,6 +201,9 @@ void setup() {
     String g = s.substring(0, s.lastIndexOf('.')) + ".1";
     gateway.fromString(g.c_str());
 
+    WiFi.config(ip, gateway, IPAddress(255, 255, 255, 0),
+                IPAddress(8, 8, 8, 8));
+
     Serial.print("Set IP: ");
     Serial.println(ip);
     // wm.setSTAStaticIPConfig(ip, gateway, IPAddress(255, 255, 255, 0),
@@ -272,13 +261,12 @@ void setup() {
   mqtt_broker->begin();
 
   // install www handlers
-  // httpUpdater.setup(&server, "/update");
   server.onNotFound(handle_404);
   server.on("/", HTTP_ANY, handle_root);
   server.on("/config", HTTP_ANY, handle_config);
   server.on("/reboot", HTTP_ANY, handle_reboot);
   server.on("/reset", HTTP_ANY, handle_reset);
-
+  updateServer.setup(&server, "/update");
   server.begin();
 
   // discovery protocols
@@ -319,9 +307,6 @@ void setup() {
 */
 
 void loop() {
-  // handle www
-  // server.handleClient();
-
   // handle discovery protocols
   // MDNS.update();
 
