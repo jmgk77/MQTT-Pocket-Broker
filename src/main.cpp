@@ -22,9 +22,12 @@ Copyright JMGK 2024
 
 #include <Arduino.h>
 
-WiFiManager wm;
-ESP8266WebServer server;
-ESP8266HTTPUpdateServer httpUpdater;
+// WiFiManager wm;
+// ESP8266WebServer server;
+
+AsyncWebServer server(80);
+
+// ESP8266HTTPUpdateServer httpUpdater;
 
 char boot_time[32];
 
@@ -42,9 +45,11 @@ PicoMQTT::Client* mqtt_client;
  ╚══╝╚══╝ ╚══════╝╚═════╝
 */
 
-void handle_404() { server.send(200, F("text/txt"), F("Not found")); }
+void handle_404(AsyncWebServerRequest* request) {
+  request->send(404, "text/plain", "Not found");
+}
 
-void handle_root() {
+void handle_root(AsyncWebServerRequest* request) {
   uint32_t heap = ESP.getFreeHeap();
   String s;
   //
@@ -72,15 +77,26 @@ void handle_root() {
        "value='REBOOT'></form>";
   s += "<form action='/reset' method='POST'><input type='submit' "
        "value='RESET'></form>";
-  // send config page
-  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  server.send_P(200, "text/html", html_header);
-  server.sendContent_P(s.c_str());
-  server.sendContent_P(html_footer);
+  // send root page
+  request->send(200, "text/html", html_header + s + html_footer);
 }
 
-void handle_config() {
-  if (server.hasArg("s")) {
+void handle_config(AsyncWebServerRequest* request) {
+  // List all parameters
+  int params = request->params();
+  for (int i = 0; i < params; i++) {
+    AsyncWebParameter* p = request->getParam(i);
+    if (p->isFile()) {  // p->isPost() is also true
+      Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(),
+                    p->value().c_str(), p->size());
+    } else if (p->isPost()) {
+      Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    } else {
+      Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+    }
+  }
+  //
+  if (request->hasParam("s", true)) {
     // read options
     FORM_SAVE_STRING(device_name)
     FORM_SAVE_STRING(mqtt_server_ip)
@@ -95,8 +111,8 @@ void handle_config() {
     // save data to eeprom
     save_eeprom();
     dump_eeprom();
-    server.send(200, F("text/html"),
-                F("<meta http-equiv='refresh' content='0; url=/config' />"));
+    request->send(200, "text/html",
+                  "<meta http-equiv='refresh' content='0; url=/config'/>");
   } else {
     String s;
     FORM_START("/config")
@@ -127,28 +143,25 @@ void handle_config() {
     // add javascript for config page
     s += js_config;
     // send config page
-    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-    server.send_P(200, "text/html", html_header);
-    server.sendContent_P(s.c_str());
-    server.sendContent_P(html_footer);
+    request->send(200, "text/html", html_header + s + html_footer);
   }
 }
 
-void handle_reboot() {
-  server.send(200, F("text/html"),
-              F("<meta http-equiv='refresh' content='15; url=/' />"));
+void handle_reboot(AsyncWebServerRequest* request) {
+  request->send(200, "text/html",
+                "<meta http-equiv='refresh' content='15; url=/' />");
   delay(1 * 1000);
   ESP.restart();
   delay(2 * 1000);
 }
 
-void handle_reset() {
+void handle_reset(AsyncWebServerRequest* request) {
   // erase eeprom
-  eeprom = {};
+  default_eeprom();
   save_eeprom();
   // reset wifi
-  wm.resetSettings();
-  handle_reboot();
+  // wm.resetSettings();
+  handle_reboot(request);
 }
 
 /*
@@ -186,9 +199,9 @@ void setup() {
   // connect to internet
   WiFi.mode(WIFI_STA);
   delay(10);
-  wm.setDebugOutput(false);
+  // wm.setDebugOutput(false);
   WiFi.hostname(eeprom.device_name);
-  wm.setConfigPortalTimeout(180);
+  // wm.setConfigPortalTimeout(180);
   WiFi.setAutoReconnect(true);
   WiFi.persistent(true);
 
@@ -204,14 +217,20 @@ void setup() {
 
     Serial.print("Set IP: ");
     Serial.println(ip);
-    wm.setSTAStaticIPConfig(ip, gateway, IPAddress(255, 255, 255, 0),
-                            IPAddress(8, 8, 8, 8));
+    // wm.setSTAStaticIPConfig(ip, gateway, IPAddress(255, 255, 255, 0),
+    //                         IPAddress(8, 8, 8, 8));
   }
 
   // captive portal
-  if (!wm.autoConnect(eeprom.device_name)) {
-    ESP.restart();
-    delay(1 * 1000);
+  // if (!wm.autoConnect(eeprom.device_name)) {
+  //   ESP.restart();
+  //   delay(1 * 1000);
+  // }
+  WiFi.mode(WIFI_STA);
+  WiFi.begin("ELEUSIS", "35026324");
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.printf("WiFi Failed!\n");
+    return;
   }
   Serial.println("Got IP: " + WiFi.localIP().toString());
 
@@ -253,18 +272,18 @@ void setup() {
   mqtt_broker->begin();
 
   // install www handlers
-  httpUpdater.setup(&server, "/update");
+  // httpUpdater.setup(&server, "/update");
   server.onNotFound(handle_404);
-  server.on("/", handle_root);
-  server.on("/config", handle_config);
-  server.on("/reboot", handle_reboot);
-  server.on("/reset", handle_reset);
+  server.on("/", HTTP_ANY, handle_root);
+  server.on("/config", HTTP_ANY, handle_config);
+  server.on("/reboot", HTTP_ANY, handle_reboot);
+  server.on("/reset", HTTP_ANY, handle_reset);
 
   server.begin();
 
   // discovery protocols
-  MDNS.begin(eeprom.device_name);
-  MDNS.addService("http", "tcp", 80);
+  // MDNS.begin(eeprom.device_name);
+  // MDNS.addService("http", "tcp", 80);
 
   // get internet time (GMT-3)
   configTime("<-03>3", "pool.ntp.org");
@@ -301,10 +320,10 @@ void setup() {
 
 void loop() {
   // handle www
-  server.handleClient();
+  // server.handleClient();
 
   // handle discovery protocols
-  MDNS.update();
+  // MDNS.update();
 
   // handle mqtt broker
   mqtt_broker->loop();
