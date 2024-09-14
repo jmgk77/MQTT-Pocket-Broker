@@ -11,10 +11,10 @@
 #include <ESPAsyncHTTPUpdateServer.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
 #include <ESP_EEPROM.h>
 #include <PicoMQTT.h>
 #include <Ticker.h>
-// #include <WiFiManager.h>
 
 #include "eeprom.h"
 #include "html.h"

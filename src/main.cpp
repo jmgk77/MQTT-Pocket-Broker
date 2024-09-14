@@ -10,7 +10,7 @@
 Copyright JMGK 2024
 */
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
@@ -22,9 +22,9 @@ Copyright JMGK 2024
 
 #include <Arduino.h>
 
-// WiFiManager wm;
-
+DNSServer dns;
 AsyncWebServer server(80);
+AsyncWiFiManager wm(&server, &dns);
 
 ESPAsyncHTTPUpdateServer updateServer;
 
@@ -146,7 +146,7 @@ void handle_reset(AsyncWebServerRequest* request) {
   default_eeprom();
   save_eeprom();
   // reset wifi
-  // wm.resetSettings();
+  wm.resetSettings();
   handle_reboot(request);
 }
 
@@ -185,9 +185,9 @@ void setup() {
   // connect to internet
   WiFi.mode(WIFI_STA);
   delay(10);
-  // wm.setDebugOutput(false);
+  wm.setDebugOutput(false);
   WiFi.hostname(eeprom.device_name);
-  // wm.setConfigPortalTimeout(180);
+  wm.setConfigPortalTimeout(180);
   WiFi.setAutoReconnect(true);
   WiFi.persistent(true);
 
@@ -206,15 +206,13 @@ void setup() {
 
     Serial.print("Set IP: ");
     Serial.println(ip);
-    // wm.setSTAStaticIPConfig(ip, gateway, IPAddress(255, 255, 255, 0),
-    //                         IPAddress(8, 8, 8, 8));
   }
 
   // captive portal
-  // if (!wm.autoConnect(eeprom.device_name)) {
-  //   ESP.restart();
-  //   delay(1 * 1000);
-  // }
+  if (!wm.autoConnect(eeprom.device_name)) {
+    ESP.restart();
+    delay(1 * 1000);
+  }
   WiFi.mode(WIFI_STA);
   WiFi.begin("ELEUSIS", "35026324");
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
