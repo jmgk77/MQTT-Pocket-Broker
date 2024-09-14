@@ -20,20 +20,16 @@ Copyright JMGK 2024
 
 #include "main.h"
 
-#include <Arduino.h>
-
 DNSServer dns;
 AsyncWebServer server(80);
 AsyncWiFiManager wm(&server, &dns);
-
 ESPAsyncHTTPUpdateServer updateServer;
+PicoMQTT::Server* mqtt_broker;
+PicoMQTT::Client* mqtt_client;
 
 char boot_time[32];
 
 uint32_t startup_heap;
-
-PicoMQTT::Server* mqtt_broker;
-PicoMQTT::Client* mqtt_client;
 
 /*
 ██╗    ██╗███████╗██████╗
@@ -214,11 +210,7 @@ void setup() {
     delay(1 * 1000);
   }
   WiFi.mode(WIFI_STA);
-  WiFi.begin("ELEUSIS", "35026324");
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.printf("WiFi Failed!\n");
-    return;
-  }
+
   Serial.println("Got IP: " + WiFi.localIP().toString());
 
   // mqtt broker
@@ -284,13 +276,6 @@ void setup() {
   time_t t = time(NULL);
   strncpy(boot_time, ctime(&t), sizeof(boot_time));
   Serial.print(boot_time);
-
-  // #ifdef DEBUG
-  //   debug_ram.attach(10, []() {
-  //     Serial.printf("MEM (%d)[%d]\n", ESP.getFreeHeap(),
-  //                   ESP.getMaxFreeBlockSize());
-  //   });
-  // #endif
 
   Serial.println(F("--------------------SETUP DONE--------------------"));
 }
