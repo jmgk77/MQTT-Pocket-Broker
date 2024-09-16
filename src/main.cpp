@@ -10,7 +10,7 @@
 Copyright JMGK 2024
 */
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
@@ -90,6 +90,8 @@ void handle_config(AsyncWebServerRequest* request) {
     FORM_SAVE_STRING(mqtt_remote_password)
     FORM_SAVE_BOOL(mqtt_remote_send)
     FORM_SAVE_BOOL(mqtt_remote_receive)
+    FORM_SAVE_STRING(mqtt_remote_remove_prefix)
+    FORM_SAVE_STRING(mqtt_remote_add_prefix)
     // save data to eeprom
     save_eeprom();
     dump_eeprom();
@@ -109,6 +111,8 @@ void handle_config(AsyncWebServerRequest* request) {
     FORM_ASK_VALUE(mqtt_remote_password, "MQTT remote password")
     FORM_ASK_BOOL(mqtt_remote_send, "Send to remote MQTT")
     FORM_ASK_BOOL(mqtt_remote_receive, "Receive from remote MQTT")
+    FORM_ASK_VALUE(mqtt_remote_remove_prefix, "Remove PREFIX from remote MQTT")
+    FORM_ASK_VALUE(mqtt_remote_add_prefix, "Add PREFIX to remote MQTT")
     FORM_END("SALVAR")
     // update
     s +=
@@ -224,15 +228,24 @@ void setup() {
 
     if (eeprom.mqtt_remote_receive) {
       // mqtt remote listener
-      mqtt_client->subscribe(
-          "#", [](const char* topic, const void* payload, size_t payload_size) {
-            Serial.printf("Received REMOTE message in topic '%s': %s\n", topic,
-                          (char*)payload);
-            Serial.printf("Sending REMOTE->LOCAL message in topic '%s': %s\n",
-                          topic, (char*)payload);
-            // send to local broker
-            mqtt_broker->publish(topic, payload, payload_size);
-          });
+      mqtt_client->subscribe("#", [](const char* topic, const void* payload,
+                                     size_t payload_size) {
+        Serial.printf("Received REMOTE message in topic '%s': %s\n", topic,
+                      (char*)payload);
+        // remove topic prefix
+        int l = strlen(eeprom.mqtt_remote_remove_prefix);
+        if (l) {
+          if (strncmp(eeprom.mqtt_remote_remove_prefix, topic, l) == 0) {
+            Serial.printf("Removing %s of %s, become %s\n",
+                          eeprom.mqtt_remote_remove_prefix, topic, topic + l);
+            topic += l;
+          }
+        }
+        // send to local broker
+        mqtt_broker->publish(topic, payload, payload_size);
+        Serial.printf("Sending REMOTE->LOCAL message in topic '%s': %s\n",
+                      topic, (char*)payload);
+      });
     }
   }
 
@@ -242,10 +255,19 @@ void setup() {
         Serial.printf("Received LOCAL message in topic '%s': %s\n", topic,
                       (char*)payload);
         if (eeprom.mqtt_remote_enable && eeprom.mqtt_remote_send) {
+          if (strlen(eeprom.mqtt_remote_add_prefix)) {
+            // add prefix to topic
+            char buf[512];
+            strcpy(buf, eeprom.mqtt_remote_add_prefix);
+            strcat(buf, topic);
+            Serial.printf("Adding %s in %s, become %s\n",
+                          eeprom.mqtt_remote_add_prefix, topic, buf);
+            topic = (const char*)&buf;
+          }
           // send to remote mqtt
+          mqtt_client->publish(topic, payload, payload_size);
           Serial.printf("Sending LOCAL->REMOTE message in topic '%s': %s\n",
                         topic, (char*)payload);
-          mqtt_client->publish(topic, payload, payload_size);
         };
       });
   mqtt_broker->begin();

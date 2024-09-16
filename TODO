@@ -1,9 +1,7 @@
-* in "Enable remote MQTT"
-** in "Send to remote MQTT"
-*** include "Add topic prefix"
-** in "Receive from remote MQTT"
-*** include "Remove topic prefix"
-
 * add "ESPNOW to MQTT"
-** listen ESPNOW multicast with "MQTT|device_name|topic|message"
+** listen ESPNOW multicast with "MQTT|device_name|type|topic|message"
 *** publish
+
+* secure connect to remote mqtt (https://github.com/mlesniew/PicoMQTT/issues/44)
+
+

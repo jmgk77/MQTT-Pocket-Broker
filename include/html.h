@@ -54,7 +54,7 @@ var status=!(document.getElementsByName(cbox)[1].checked);
   }
 }
 
-mqtt_remote_group=['mqtt_remote_ip', 'mqtt_remote_port', 'mqtt_remote_username', 'mqtt_remote_password', 'mqtt_remote_send', 'mqtt_remote_receive'];
+mqtt_remote_group=['mqtt_remote_ip', 'mqtt_remote_port', 'mqtt_remote_username', 'mqtt_remote_password', 'mqtt_remote_send', 'mqtt_remote_receive','mqtt_remote_remove_prefix','mqtt_remote_add_prefix'];
 _enable_disable('mqtt_remote_enable',mqtt_remote_group);
 </script>
 )"""";
