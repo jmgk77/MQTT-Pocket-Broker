@@ -11,6 +11,7 @@ struct eeprom_data {
   char device_name[32];
   char mqtt_server_ip[64];
   unsigned int mqtt_server_port;
+  bool espnow2mqtt;
   bool mqtt_remote_enable;
   char mqtt_remote_ip[64];
   unsigned int mqtt_remote_port;
@@ -29,6 +30,7 @@ const char EEPROM_INFO[] PROGMEM =
     "\tdevice_name: %s\n"
     "\tmqtt_server_ip: %s\n"
     "\tmqtt_server_port: %d\n"
+    "\tespnow2mqtt: %s\n"
     "\tmqtt_remote_enable: %s\n"
     "\tmqtt_remote_ip: %s\n"
     "\tmqtt_remote_port: %d\n"
@@ -40,20 +42,22 @@ const char EEPROM_INFO[] PROGMEM =
     "\tmqtt_remote_add_prefix: %s\n";
 
 void dump_eeprom() {
-  Serial.printf_P(EEPROM_INFO, eeprom.sign, eeprom.crc32, eeprom.device_name,
-                  eeprom.mqtt_server_ip, eeprom.mqtt_server_port,
-                  eeprom.mqtt_remote_enable ? "YES" : "NO",
-                  eeprom.mqtt_remote_ip, eeprom.mqtt_remote_port,
-                  eeprom.mqtt_remote_username, eeprom.mqtt_remote_password,
-                  eeprom.mqtt_remote_send ? "YES" : "NO",
-                  eeprom.mqtt_remote_receive ? "YES" : "NO",
-                  eeprom.mqtt_remote_remove_prefix, eeprom.mqtt_remote_add_prefix);
+  Serial.printf_P(
+      EEPROM_INFO, eeprom.sign, eeprom.crc32, eeprom.device_name,
+      eeprom.mqtt_server_ip, eeprom.mqtt_server_port,
+      eeprom.espnow2mqtt ? "YES" : "NO",
+      eeprom.mqtt_remote_enable ? "YES" : "NO", eeprom.mqtt_remote_ip,
+      eeprom.mqtt_remote_port, eeprom.mqtt_remote_username,
+      eeprom.mqtt_remote_password, eeprom.mqtt_remote_send ? "YES" : "NO",
+      eeprom.mqtt_remote_receive ? "YES" : "NO",
+      eeprom.mqtt_remote_remove_prefix, eeprom.mqtt_remote_add_prefix);
 }
 
 String dump_eeprom_string() {
   char buffer[1024];
   sprintf(buffer, EEPROM_INFO, eeprom.sign, eeprom.crc32, eeprom.device_name,
           eeprom.mqtt_server_ip, eeprom.mqtt_server_port,
+          eeprom.espnow2mqtt ? "YES" : "NO",
           eeprom.mqtt_remote_enable ? "YES" : "NO", eeprom.mqtt_remote_ip,
           eeprom.mqtt_remote_port, eeprom.mqtt_remote_username,
           eeprom.mqtt_remote_password, eeprom.mqtt_remote_send ? "YES" : "NO",

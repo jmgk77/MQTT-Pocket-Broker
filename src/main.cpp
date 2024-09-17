@@ -11,6 +11,7 @@ Copyright JMGK 2024
 */
 
 #define DEBUG
+// #define DUMP_ESPNOW_PACKET
 
 #ifdef DEBUG
 #define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
@@ -30,6 +31,77 @@ PicoMQTT::Client* mqtt_client;
 char boot_time[32];
 
 uint32_t startup_heap;
+
+/*
+███████╗███████╗██████╗ ███╗   ██╗ ██████╗ ██╗    ██╗
+██╔════╝██╔════╝██╔══██╗████╗  ██║██╔═══██╗██║    ██║
+█████╗  ███████╗██████╔╝██╔██╗ ██║██║   ██║██║ █╗ ██║
+██╔══╝  ╚════██║██╔═══╝ ██║╚██╗██║██║   ██║██║███╗██║
+███████╗███████║██║     ██║ ╚████║╚██████╔╝╚███╔███╔╝
+╚══════╝╚══════╝╚═╝     ╚═╝  ╚═══╝ ╚═════╝  ╚══╝╚══╝
+*/
+
+void init_espnow() {
+  Serial.print("ESPNOW ");
+
+  // init espnow
+  if ((esp_now_init() != 0) ||
+      (esp_now_set_self_role(ESP_NOW_ROLE_COMBO) != 0)) {
+    Serial.println("NOK");
+    return;
+  }
+
+  // callback
+  esp_now_register_recv_cb(
+      [](uint8_t* mac, uint8_t* incomingData, uint8_t len) {
+#ifdef DUMP_ESPNOW_PACKET
+        // dump incomming packet
+        Serial.printf("ESPNOW recv:\t[%02x:%02x:%02x:%02x:%02x:%02x]", mac[0],
+                      mac[1], mac[2], mac[3], mac[4], mac[5]);
+        for (int i = 0; i < len; i++) {
+          if (i % 8 == 0) {
+            Serial.print("\n\t");
+          }
+          Serial.printf("%02x ", incomingData[i]);
+        }
+        Serial.println();
+        for (int i = 0; i < len; i++) {
+          if (i % 8 == 0) {
+            Serial.print("\n\t");
+          }
+          Serial.printf(" %c ", (incomingData[i] < 32) ? '.' : incomingData[i]);
+        }
+        Serial.println();
+#endif
+        //
+        ESPNOW_DATA* packet = (ESPNOW_DATA*)incomingData;
+        if (packet->signature == ESP2MQTT_SIGNATURE) {
+          if (strcmp(eeprom.device_name, packet->device_name) == 0) {
+            // PING
+            if (packet->type == ESPNOW_PING) {
+              // send a PONG
+              packet->type = ESPNOW_PONG;
+              esp_now_send(0, incomingData, sizeof(ESPNOW_DATA));
+              Serial.println("Received ESPNOW PING, replied PONG");
+            }
+            // MQTT
+            if (packet->type == ESPNOW_MQTT) {
+              // publish to mqtt
+              Serial.printf("Received ESPNOW message in topic '%s': %s\n",
+                            packet->topic, packet->payload);
+              mqtt_broker->publish((const char*)packet->topic,
+                                   (const void*)packet->payload,
+                                   strlen(packet->payload));
+              Serial.printf("Sending ESPNOW->LOCAL message in topic '%s': %s\n",
+                            packet->topic, packet->payload);
+            }
+          }
+        }
+      });
+
+  esp_now_add_peer(broadcast_mac, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
+  Serial.println("OK");
+}
 
 /*
 ██╗    ██╗███████╗██████╗
@@ -83,6 +155,7 @@ void handle_config(AsyncWebServerRequest* request) {
     FORM_SAVE_STRING(device_name)
     FORM_SAVE_STRING(mqtt_server_ip)
     FORM_SAVE_INT(mqtt_server_port)
+    FORM_SAVE_BOOL(espnow2mqtt)
     FORM_SAVE_BOOL(mqtt_remote_enable)
     FORM_SAVE_STRING(mqtt_remote_ip)
     FORM_SAVE_INT(mqtt_remote_port)
@@ -103,6 +176,7 @@ void handle_config(AsyncWebServerRequest* request) {
     FORM_ASK_VALUE(device_name, "Device name")
     FORM_ASK_VALUE(mqtt_server_ip, "MQTT Broker fixed IP")
     FORM_ASK_VALUE(mqtt_server_port, "MQTT Broker Port")
+    FORM_ASK_BOOL(espnow2mqtt, "Enable ESPNOW to MQTT bridge")
     FORM_ASK_BOOL_JS(mqtt_remote_enable, "Enable remote MQTT",
                      js_mqtt_remote_enable)
     FORM_ASK_VALUE(mqtt_remote_ip, "MQTT remote IP")
@@ -298,6 +372,10 @@ void setup() {
   time_t t = time(NULL);
   strncpy(boot_time, ctime(&t), sizeof(boot_time));
   Serial.print(boot_time);
+
+  if (eeprom.espnow2mqtt) {
+    init_espnow();
+  }
 
   Serial.println(F("--------------------SETUP DONE--------------------"));
 }

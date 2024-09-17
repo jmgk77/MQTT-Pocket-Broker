@@ -1,7 +1,6 @@
-* add "ESPNOW to MQTT"
-** listen ESPNOW multicast with "MQTT|device_name|type|topic|message"
-*** publish
-
 * secure connect to remote mqtt (https://github.com/mlesniew/PicoMQTT/issues/44)
+** read certiticate from littlefs
+** option in config page to use connection to remote mqtt
+** page to upload and delete from littlefs
 
 

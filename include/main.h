@@ -15,8 +15,10 @@
 #include <ESP_EEPROM.h>
 #include <PicoMQTT.h>
 #include <Ticker.h>
+#include <espnow.h>
 
 #include "eeprom.h"
+#include "esp2mqtt.h"
 #include "html.h"
 #include "version.h"
 
