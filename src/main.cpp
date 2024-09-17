@@ -10,7 +10,7 @@
 Copyright JMGK 2024
 */
 
-#define DEBUG
+// #define DEBUG
 // #define DUMP_ESPNOW_PACKET
 
 #ifdef DEBUG

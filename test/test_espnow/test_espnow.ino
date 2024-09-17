@@ -1,17 +1,18 @@
 #include <Arduino.h>
-#include <espnow.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <espnow.h>
 
-#define SERVER "MQTT_SERVER_DEBUG"
+#define SERVER "MQTT_SERVER"
+// #define SERVER "MQTT_SERVER_DEBUG"
 
 #define DUMP_ESPNOW_PACKET
 
-uint8_t broadcast_mac[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+long last_update;
+
+// ###########################################################################
 
 #define ESP2MQTT_SIGNATURE 'm'
-
-enum { ESPNOW_PING, ESPNOW_PONG, ESPNOW_MQTT };
 
 // MQTT|type|device_name|topic|payload
 typedef struct {
@@ -23,24 +24,32 @@ typedef struct {
   char payload[100];
 } ESPNOW_DATA;
 
-ESPNOW_DATA espnow_data;
+uint8_t broadcast_mac[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-bool espnow_ok;
+
+enum { ESPNOW_PING,
+       ESPNOW_PONG,
+       ESPNOW_MQTT };
+
+
+ESPNOW_DATA espnow_data;
 
 #define ESP_OK 0
 #define LOWEST_CHANNEL 1
 #define HIGHEST_CHANNEL 16
 
-long last_update;
+// ###########################################################################
 
 bool check_espnow() {
   bool found = false;
+  static bool espnow_ok;
+
   if (esp_now_init() == ESP_OK) {
     Serial.printf("ESPNOW channel %d...\n", WiFi.channel());
     esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
-    esp_now_register_recv_cb(
-    [](uint8_t *mac, uint8_t *incomingData, uint8_t len) {
-      // receive data
+    esp_now_register_recv_cb([](uint8_t *mac, uint8_t *incomingData,
+                                uint8_t len) {
+    // receive data
 #ifdef DUMP_ESPNOW_PACKET
       Serial.printf("ESPNOW recv:\t[%02x:%02x:%02x:%02x:%02x:%02x]", mac[0],
                     mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -60,7 +69,7 @@ bool check_espnow() {
       Serial.println();
 #endif
 
-      ESPNOW_DATA* packet = (ESPNOW_DATA*)incomingData;
+      ESPNOW_DATA *packet = (ESPNOW_DATA *)incomingData;
       if (packet->signature == ESP2MQTT_SIGNATURE) {
         //        Serial.println("*sign ok");
         if (strcmp(SERVER, packet->device_name) == 0) {
@@ -96,19 +105,7 @@ bool check_espnow() {
   return found;
 }
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println("ESP TEST");
-
-  //build ping packet
-  espnow_data = {};
-  espnow_data.signature = ESP2MQTT_SIGNATURE;
-  espnow_data.type = ESPNOW_PING;
-  strcpy(espnow_data.device_name, SERVER);
-  strcpy(espnow_data.topic, "TESTE");
-  strcpy(espnow_data.payload, "TESTE");
-
+bool scan_espnow() {
   bool found = false;
 
   // scan all channels
@@ -124,20 +121,46 @@ void setup() {
       break;
     }
   }
-  Serial.printf("ESPNOW %s\n", found ? "OK" : "NOK");
-  while (!found) {}
+  return found;
+}
 
+// ###########################################################################
+
+void setup() {
+  Serial.begin(115200);
+  delay(10);
+  Serial.println();
+  Serial.println("ESP TEST");
+
+  // build ping packet
+  espnow_data = {};
+  espnow_data.signature = ESP2MQTT_SIGNATURE;
+  espnow_data.type = ESPNOW_PING;
+  strcpy(espnow_data.device_name, SERVER);
+  strcpy(espnow_data.topic, "TESTE");
+  strcpy(espnow_data.payload, "TESTE");
+
+  //scan for bridge
+  bool found;
+  do {
+    found = scan_espnow();
+    Serial.printf("ESPNOW %s\n", found ? "OK" : "NOK");
+  } while (!found);
+
+  // build mqtt packet
   espnow_data.type = ESPNOW_MQTT;
   strcpy(espnow_data.topic, "TESTE_ESPNOW/RND");
+
   last_update = millis();
 }
 
 void loop() {
-  char buf[64];
   if ((millis() - last_update) > (30 * 1000)) {
     last_update = millis();
     Serial.printf("Sending %d\n", last_update);
+    char buf[64];
     strcpy(espnow_data.payload, itoa(last_update, buf, 10));
+    //send MQTT via ESPNOW
     esp_now_send(0, (u8 *)&espnow_data, sizeof(espnow_data));
   }
 }
