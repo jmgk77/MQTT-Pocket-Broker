@@ -124,4 +124,5 @@ See `platformio.ini` for exact dependency and environment configuration.
 
 ## License
 
-Use, modify, and extend this firmware as needed for embedded MQTT and ESPNOW gateway applications.
+This project is licensed under the GNU General Public License version 3 (GPLv3).
+See the `LICENSE` file for full terms and conditions.
