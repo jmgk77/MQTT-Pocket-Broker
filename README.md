@@ -1,29 +1,30 @@
-# MQTT Pocket Gateway
+# MQTT Pocket Broker
 
-Firmware for an ESP8266-based bridge that connects ESP-NOW devices to MQTT and provides a lightweight local MQTT broker, avoiding the need for a full external broker installation in simple deployments.
+Firmware for an ESP8266-based standalone MQTT broker and IoT gateway. It provides a lightweight local message hub and an optional bridge for ESP-NOW devices, eliminating the need for a dedicated external broker in many setups.
 
 ## Overview
 
-This project turns a D1 Mini (ESP8266) into a compact network gateway that can:
+This project turns a D1 Mini (ESP8266) into a compact MQTT server that can:
 
-- receive ESPNOW packets from nearby ESP devices
-- bridge ESPNOW payloads into a local MQTT broker
+- host a local MQTT broker using `PicoMQTT`, ideal when a full broker like Mosquitto is overkill
+- receive ESPNOW packets from nearby ESP devices and bridge them to MQTT
 - host a local web UI for configuration and firmware updates
 - optionally forward local MQTT traffic to a remote broker
 - optionally subscribe to remote MQTT and relay messages locally
+
 
 The firmware is designed for reliability on constrained hardware and uses asynchronous networking libraries for responsive HTTP and MQTT operation.
 
 ## Key Features
 
-- Built-in lightweight local MQTT broker using `PicoMQTT`, ideal when a full broker like Mosquitto is overkill
+- **Integrated MQTT Broker**: Hosts a local broker (PicoMQTT) directly on the hardware.
+- **ESP-NOW Bridge**: Routes data from low-power ESP-NOW sensors into the MQTT ecosystem.
 - Remote MQTT client support with optional publish / subscribe bridging
-- ESPNOW message receiver and packet routing
 - EEPROM-backed configurable settings with CRC32 validation
 - Wi-Fi configuration and captive portal via `ESPAsyncWiFiManager`
 - OTA firmware updates through browser upload
 - MDNS service advertising for easier discovery
-- NTP boot timestamp logging and runtime heap monitoring
+- NTP synchronization and runtime monitoring
 
 ## Hardware Target
 
@@ -32,7 +33,7 @@ The firmware is designed for reliability on constrained hardware and uses asynch
 
 ## Enclosure and Build Model
 
-- `model/` contains a professional-looking 3D printed enclosure optimized for this gateway
+- `model/` contains a 3D printed enclosure designed specifically for this broker
 - The case is designed to fit a Wemos D1 board, a tiny HLK-PM05 AC/DC module, and four heat-set inserts
 - Includes CAD sources: `mqtt_wemos.FCStd` and STEP exports for mechanical review and fabrication
 
@@ -48,7 +49,7 @@ This makes the project ready for a polished hardware deployment without addition
 
 ## Software Components
 
-- `src/main.cpp` — program entrypoint, setup, loop, web handlers, MQTT and ESPNOW logic
+- `src/main.cpp` — main logic: setup, local PicoMQTT broker, remote client, and web handlers
 - `include/main.h` — common includes and debug utilities
 - `include/eeprom.h` — persistent configuration storage, CRC validation, default values
 - `include/esp2mqtt.h` — ESPNOW packet structure and protocol constants

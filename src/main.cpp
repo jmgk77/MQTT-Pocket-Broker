@@ -14,9 +14,9 @@ Copyright JMGK 2024
 // #define DUMP_ESPNOW_PACKET
 
 #ifdef DEBUG
-#define DEFAULT_DEVICE_NAME "MQTT_SERVER_DEBUG"
+#define DEFAULT_DEVICE_NAME "MQTT_BROKER_DEBUG"
 #else
-#define DEFAULT_DEVICE_NAME "MQTT_SERVER"
+#define DEFAULT_DEVICE_NAME "MQTT_BROKER"
 #endif
 
 #include "main.h"
@@ -251,7 +251,7 @@ void setup() {
   }
 
   Serial.println(F("\n--------------------------------------------------"));
-  Serial.print("MQTT_SERVER ");
+  Serial.print("MQTT_BROKER ");
   Serial.println(VERSION_SHORT);
   dump_esp8266();
   dump_eeprom();
