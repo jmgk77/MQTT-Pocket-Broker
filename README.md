@@ -1,4 +1,4 @@
-# MQTT Server for ESP8266
+# MQTT Pocket Gateway
 
 Firmware for an ESP8266-based bridge that connects ESP-NOW devices to MQTT and provides a lightweight local MQTT broker, avoiding the need for a full external broker installation in simple deployments.
 
