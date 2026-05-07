@@ -3,7 +3,7 @@ import subprocess
 
 FILENAME_BUILDNO = "versioning"
 FILENAME_VERSION_H = "include/version.h"
-version = "v0.3."
+version = "v0.4."
 
 
 build_no = 0
@@ -18,6 +18,8 @@ with open(FILENAME_BUILDNO, "w+") as f:
     print("Build number: {}".format(build_no))
 
 hf = """
+// GENERATED FILE - DO NOT EDIT
+
 #ifndef BUILD_NUMBER
   #define BUILD_NUMBER "{}"
 #endif
@@ -31,10 +33,12 @@ hf = """
     build_no,
     version + str(build_no),
     datetime.datetime.now().replace(microsecond=0),
-    subprocess.check_output(
-        ["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip(),
-    subprocess.check_output(
-        ["git", "branch", "--show-current"]).decode("ascii").strip(),
+    subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+    .decode("ascii")
+    .strip(),
+    subprocess.check_output(["git", "branch", "--show-current"])
+    .decode("ascii")
+    .strip(),
     version + str(build_no),
 )
 with open(FILENAME_VERSION_H, "w+") as f:
