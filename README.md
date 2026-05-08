@@ -63,6 +63,7 @@ graph LR
     style Wemos fill:#00acee,stroke:#333,color:#fff,stroke-width:2px
     style Rede_Eletrica fill:#fff,stroke-dasharray: 5 5
 ```
+![Wiring diagram](model/diagram.png)
 
 ## Enclosure and Build Model
 
