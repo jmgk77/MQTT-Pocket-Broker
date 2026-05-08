@@ -31,6 +31,36 @@ The firmware is designed for reliability on constrained hardware and uses asynch
 - `D1 Mini` or other ESP8266-based board
 - PlatformIO environment configured for `espressif8266`
 
+## Wiring
+
+graph LR
+    subgraph Rede_Eletrica [Entrada AC]
+        AC1[Fase 220V]
+        AC2[Neutro]
+    end
+
+    subgraph Fonte [Conversor AC/DC]
+        HLK[HLK-PM01 5V]
+    end
+
+    subgraph Microcontrolador [Wemos D1 Mini]
+        Wemos[ESP8266 Wemos D1]
+    end
+
+    %% Conexões AC
+    AC1 --- HLK
+    AC2 --- HLK
+    
+    %% Conexões DC
+    HLK -- "+5V DC" --> PIN_5V[Pino 5V / VIN]
+    HLK -- "GND" --> PIN_GND[Pino GND]
+
+    %% Estilização
+    style HLK fill:#f96,stroke:#333,stroke-width:2px
+    style Wemos fill:#00acee,stroke:#333,color:#fff,stroke-width:2px
+    style Rede_Eletrica fill:#fff,stroke-dasharray: 5 5
+
+
 ## Enclosure and Build Model
 
 - `model/` contains a 3D printed enclosure designed specifically for this broker
