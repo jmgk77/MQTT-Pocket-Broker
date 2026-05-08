@@ -33,6 +33,7 @@ The firmware is designed for reliability on constrained hardware and uses asynch
 
 ## Wiring
 
+```
 graph LR
     subgraph Rede_Eletrica [Entrada AC]
         AC1[Fase 220V]
@@ -59,7 +60,7 @@ graph LR
     style HLK fill:#f96,stroke:#333,stroke-width:2px
     style Wemos fill:#00acee,stroke:#333,color:#fff,stroke-width:2px
     style Rede_Eletrica fill:#fff,stroke-dasharray: 5 5
-
+```
 
 ## Enclosure and Build Model
 
