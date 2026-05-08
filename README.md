@@ -33,7 +33,7 @@ The firmware is designed for reliability on constrained hardware and uses asynch
 
 ## Wiring
 
-```
+```mermaid
 graph LR
     subgraph Rede_Eletrica [Entrada AC]
         AC1[Fase 220V]
