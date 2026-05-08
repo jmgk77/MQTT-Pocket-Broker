@@ -46,6 +46,8 @@ graph LR
 
     subgraph Microcontrolador [Wemos D1 Mini]
         Wemos[ESP8266 Wemos D1]
+        PIN_5V[VIN Pin]
+        PIN_GND[GND Pin]
     end
 
     %% Conexões AC
