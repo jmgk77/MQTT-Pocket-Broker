@@ -35,12 +35,12 @@ The firmware is designed for reliability on constrained hardware and uses asynch
 
 ```mermaid
 graph LR
-    subgraph Rede_Eletrica [Entrada AC]
-        AC1[Fase 220V]
-        AC2[Neutro]
+    subgraph Rede_Eletrica [AC Input]
+        AC1[Phase 220V]
+        AC2[Neutral]
     end
 
-    subgraph Fonte [Conversor AC/DC]
+    subgraph Fonte [AC/DC Conversor]
         HLK[HLK-PM01 5V]
     end
 
@@ -53,8 +53,8 @@ graph LR
     AC2 --- HLK
     
     %% Conexões DC
-    HLK -- "+5V DC" --> PIN_5V[Pino 5V / VIN]
-    HLK -- "GND" --> PIN_GND[Pino GND]
+    HLK -- "+5V DC" --> PIN_5V[VIN Pin]
+    HLK -- "GND" --> PIN_GND[GND Pin]
 
     %% Estilização
     style HLK fill:#f96,stroke:#333,stroke-width:2px
